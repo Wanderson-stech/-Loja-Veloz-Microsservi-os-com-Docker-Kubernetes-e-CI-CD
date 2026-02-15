@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:5000"
+    environment:
+      - PEDIDOS_URL=http://pedido-service:5000
+    networks:
+      - loja-net
+    depends_on:
+      - pedido-service
+
+  pedido-service:
+    build: ./pedido-service
+    networks:
+      - loja-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  database:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: lojaveloz
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - loja-net
+
+networks:
+  loja-net:
+    driver: bridge
+
+volumes:
+  pgdata:
